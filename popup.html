@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flight Detector</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <div class="logo">
+        <div class="plane-icon">✈️</div>
+        <h1>Flight Detector</h1>
+      </div>
+      <div class="status-indicator">
+        <span id="status-text">Loading...</span>
+        <div id="status-dot" class="status-dot"></div>
+      </div>
+    </header>
+
+    <main class="popup-content">
+      <div class="section">
+        <h3>Current Page</h3>
+        <p id="current-page">Checking...</p>
+      </div>
+
+      <div class="section">
+        <h3>Settings</h3>
+        <div class="setting-item">
+          <label for="enabled-toggle">
+            <span>Enable Extension</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="enabled-toggle">
+              <span class="slider"></span>
+            </div>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <label for="show-manufacturer">
+            <span>Show Manufacturer</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="show-manufacturer">
+              <span class="slider"></span>
+            </div>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <label for="show-model">
+            <span>Show Aircraft Model</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="show-model">
+              <span class="slider"></span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Supported Aircraft</h3>
+        <div class="aircraft-list">
+          <div class="aircraft-category">
+            <h4>Boeing</h4>
+            <p>737, 747, 757, 767, 777, 787 series</p>
+          </div>
+          <div class="aircraft-category">
+            <h4>Airbus</h4>
+            <p>A220, A320, A330, A340, A350, A380 series</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Detection Log</h3>
+        <button id="export-log">Export Log</button>
+        <div id="log-list" class="log-list"></div>
+      </div>
+
+      <div class="section">
+        <h3>Missing Flights</h3>
+        <p>Download a list of flight numbers that were not found in the Vercel API database:</p>
+        <button id="export-missing-flights">Download Missing Flights</button>
+        <div id="missing-flights-count" class="missing-flights-count"></div>
+        <p style="font-size: 12px; color: #666; margin-top: 5px;">
+          These are flights that were not found in the Vercel API, even after trying Cleartrip's API as fallback.
+        </p>
+        
+        <div style="margin-top: 10px;">
+          <p><strong>Cache Management:</strong></p>
+          <button id="clear-cache" style="background-color: #dc2626; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+            🗑️ Clear Cache
+          </button>
+          <p style="font-size: 12px; color: #666; margin-top: 5px;">
+            This will clear the aircraft cache and force fresh API calls on next page refresh.
+          </p>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>How it Works</h3>
+        <p>This extension automatically detects aircraft information on Cleartrip flight booking pages and displays whether the flight is operated by Boeing or Airbus aircraft.</p>
+      </div>
+    </main>
+
+    <footer class="popup-footer">
+      <p>Currently supporting: Cleartrip</p>
+      <p>Version 1.0.0</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html> 

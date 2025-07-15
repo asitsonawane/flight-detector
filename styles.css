@@ -1,0 +1,78 @@
+/* Flight Detector Banner Styles */
+.flight-detector-banner {
+  background: #e31837;
+  color: white;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: bannerAppear 0.3s ease-out;
+}
+
+.flight-detector-banner.boeing {
+  background: #003876;
+}
+
+.flight-detector-banner.airbus {
+  background: #e31837;
+}
+
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.banner-text {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.banner-model {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* Animation for new banners */
+@keyframes bannerAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .flight-detector-banner {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  .banner-text {
+    font-size: 12px;
+  }
+  
+  .banner-model {
+    font-size: 10px;
+  }
+}
+
+/* Ensure banners don't interfere with page layout */
+.flight-detector-banner {
+  position: relative;
+  display: block;
+  width: 100%;
+} 
