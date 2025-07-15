@@ -1,124 +1,107 @@
 # Flight Detector Chrome Extension
 
-A Chrome extension that automatically detects and displays aircraft manufacturer information (Boeing or Airbus) when booking flights on Cleartrip.
+A Chrome extension that automatically identifies aircraft makes (Boeing, Airbus, and others) on flight booking websites.
 
 ## Features
 
-- **Automatic Detection**: Scans Cleartrip flight booking pages for aircraft information
-- **Visual Badges**: Displays colored badges showing Boeing (blue) or Airbus (red) aircraft
-- **Real-time Updates**: Works with dynamic content loading on Cleartrip
-- **Customizable Settings**: Toggle extension on/off and customize display options
-- **Comprehensive Database**: Supports major Boeing and Airbus aircraft models
-
-## Supported Aircraft
-
-### Boeing
-- 737 series (B737, B738, B739, etc.)
-- 747 series (B747)
-- 757 series (B757)
-- 767 series (B767)
-- 777 series (B777)
-- 787 series (B787, B788, B789, B78X)
-
-### Airbus
-- A220 series (A220, A221, A223)
-- A320 series (A318, A319, A320, A321, A32A-Z)
-- A330 series (A330, A332, A333)
-- A340 series (A340, A342, A343, A345, A346)
-- A350 series (A350, A351, A359)
-- A380 series (A380, A388)
+- **Real-time aircraft detection** on Cleartrip.com
+- **Color-coded banners** for different aircraft types
+- **Smart caching** to minimize API calls
+- **Missing flight tracking** for database improvement
+- **Data export** functionality
+- **Privacy-focused** - no personal data collected
 
 ## Installation
 
-### Method 1: Load Unpacked Extension (Development)
+### From Chrome Web Store (Recommended)
+1. Visit the Chrome Web Store
+2. Search for "Flight Detector"
+3. Click "Add to Chrome"
+4. Grant permissions when prompted
 
-1. Clone or download this repository
+### Manual Installation (Development)
+1. Download the extension files
 2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
+3. Enable "Developer mode"
 4. Click "Load unpacked" and select the extension folder
-5. The extension should now appear in your extensions list
-
-### Method 2: Pack Extension (Distribution)
-
-1. Follow steps 1-3 from Method 1
-2. Click "Pack extension" in the extensions page
-3. This will create a `.crx` file that can be distributed
 
 ## Usage
 
-1. **Enable the Extension**: The extension is enabled by default. You can toggle it on/off using the extension popup.
+1. Install the extension
+2. Visit [Cleartrip.com](https://www.cleartrip.com)
+3. Search for flights
+4. Watch as aircraft banners appear on flight cards
 
-2. **Visit Cleartrip**: Navigate to [cleartrip.com](https://www.cleartrip.com) and search for flights.
+## Aircraft Banner Colors
 
-3. **View Aircraft Information**: The extension will automatically scan the page and display aircraft manufacturer badges next to flight information.
+- 🔴 **Red**: Boeing aircraft
+- 🟢 **Green**: Airbus aircraft  
+- 🟡 **Yellow**: Other aircraft types
+- 🟠 **Orange**: Unknown aircraft
 
-4. **Customize Settings**: Click the extension icon to access settings:
-   - Enable/Disable the extension
-   - Show/Hide manufacturer information
-   - Show/Hide aircraft model details
+## Privacy
 
-## How It Works
+This extension:
+- ✅ Does not collect personal information
+- ✅ Processes all data locally
+- ✅ Only shares flight numbers with aircraft databases
+- ✅ Complies with GDPR and CCPA
 
-The extension uses a content script that:
+## Technical Details
 
-1. **Scans the Page**: Monitors Cleartrip pages for flight information
-2. **Detects Aircraft Codes**: Looks for standard aircraft codes (e.g., B737, A320)
-3. **Displays Badges**: Adds visual indicators showing Boeing or Airbus aircraft
-4. **Updates Dynamically**: Responds to page changes and dynamic content loading
+- **Platform Support**: Cleartrip.com (primary)
+- **APIs Used**: Vercel aircraft database, Cleartrip flight API
+- **Storage**: Local Chrome storage only
+- **Permissions**: Active tab, storage, host permissions
 
-## File Structure
+## Project Structure
 
 ```
 flight-detector/
-├── manifest.json          # Extension configuration
+├── manifest.json          # Extension manifest
 ├── content.js            # Main content script
-├── background.js         # Background service worker
-├── popup.html           # Extension popup interface
-├── popup.css            # Popup styles
+├── background.js         # Background script
+├── popup.html           # Extension popup
 ├── popup.js             # Popup functionality
-├── styles.css           # Badge styles
-├── icons/               # Extension icons
+├── popup.css            # Popup styling
+├── aircraft-manager.js  # Aircraft data management
+├── platforms/           # Platform-specific code
+│   └── cleartrip.js    # Cleartrip integration
+├── icons/              # Extension icons
+├── styles.css          # Global styles
+├── extension.zip       # Chrome Web Store package
+├── docs/               # Documentation
+│   ├── PUBLISHING_GUIDE.md
+│   ├── privacy-policy.html
+│   ├── store-description.md
+│   └── ...
 └── README.md           # This file
 ```
 
+## Key Components
+
+- **AircraftManager**: Handles aircraft data fetching and caching
+- **CleartripPlatform**: Platform-specific flight extraction
+- **FlightDetectorContent**: Main content script with dynamic loading
+- **Popup Interface**: User interface for data management
+
 ## Development
 
-### Prerequisites
-- Google Chrome browser
-- Basic knowledge of JavaScript and Chrome Extension APIs
+### Building for Chrome Web Store
 
-### Making Changes
+1. Ensure all files are in the root directory
+2. Create a ZIP file excluding documentation:
+   ```bash
+   zip -r extension.zip . -x "docs/*" "*.md" "*.git*"
+   ```
+3. Upload `extension.zip` to Chrome Web Store
 
-1. **Modify Content Script**: Edit `content.js` to change detection logic
-2. **Update Aircraft Database**: Add new aircraft codes in the `aircraftDatabase` object
-3. **Customize Styles**: Modify `styles.css` for badge appearance
-4. **Test Changes**: Reload the extension in `chrome://extensions/`
+### Testing
 
-### Adding Support for Other Websites
-
-To add support for other flight booking websites:
-
-1. Update `manifest.json` to include new host permissions
-2. Modify `content.js` to handle different page structures
-3. Test thoroughly on the new website
-
-## Troubleshooting
-
-### Extension Not Working
-1. Check if the extension is enabled in `chrome://extensions/`
-2. Ensure you're on a Cleartrip page
-3. Refresh the page and try again
-4. Check browser console for any error messages
-
-### Badges Not Appearing
-1. Verify that the page contains aircraft information
-2. Check if the aircraft codes are in our database
-3. Try refreshing the page
-4. Disable and re-enable the extension
-
-### Performance Issues
-- The extension is lightweight and shouldn't impact page performance
-- If issues occur, try disabling the extension temporarily
+1. Load the extension in Chrome
+2. Visit Cleartrip.com and search for flights
+3. Verify aircraft banners appear correctly
+4. Test popup functionality and data export
 
 ## Contributing
 
@@ -132,18 +115,10 @@ To add support for other flight booking websites:
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Version History
-
-- **v1.0.0**: Initial release with Cleartrip support
-
-## Future Enhancements
-
-- Support for additional flight booking websites
-- More detailed aircraft information
-- Flight tracking integration
-- User preferences for badge positioning
-- Export flight data functionality
-
 ## Support
 
-For issues, questions, or feature requests, please open an issue on the GitHub repository. 
+For support, please contact us through the Chrome Web Store developer contact information.
+
+---
+
+**Note**: This extension is designed for educational and informational purposes. Aircraft information is sourced from public databases and may not be 100% accurate for all flights. 

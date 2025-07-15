@@ -6,6 +6,7 @@ class AircraftManager {
     this.vercelApiConnected = false;
     this.cleartripApiData = null;
     this.platform = null;
+    this.isFetchingFromApi = false; // Flag to prevent duplicate API calls
   }
 
   // Load missing flights from storage
@@ -292,6 +293,12 @@ class AircraftManager {
       return;
     }
 
+    // Prevent duplicate API calls
+    if (this.isFetchingFromApi) {
+      console.log('⏳ API call already in progress, skipping...');
+      return;
+    }
+
     // Get missing flights that are not in cache
     const missingFlights = Array.from(this.missingFlights).filter(flight => !this.aircraftCache[flight]);
     
@@ -304,6 +311,8 @@ class AircraftManager {
     console.log('Missing flights:', missingFlights);
 
     try {
+      this.isFetchingFromApi = true; // Set flag to prevent duplicate calls
+      
       // First, try Vercel API
       const vercelResults = await this.fetchFromVercelApi(missingFlights);
       
@@ -334,6 +343,8 @@ class AircraftManager {
     } catch (error) {
       console.error('❌ Error fetching missing aircraft data:', error);
       this.showApiErrorMessage();
+    } finally {
+      this.isFetchingFromApi = false; // Reset flag
     }
   }
 
@@ -503,8 +514,14 @@ class AircraftManager {
     const flightNumbers = this.platform.extractFlightNumbers();
     console.log('Extracted flight numbers from DOM:', flightNumbers);
     
-    // Check each flight against cache
+    if (flightNumbers.length === 0) {
+      console.log('ℹ️ No flights found on page');
+      return;
+    }
+
+    // Check each flight against cache and collect missing flights
     const missingFlights = [];
+    const flightsWithInfo = [];
     
     for (const flight of flightNumbers) {
       console.log(`\n--- Processing flight: ${flight.rawFlightNumber} ---`);
@@ -512,18 +529,21 @@ class AircraftManager {
       
       if (aircraftInfo) {
         console.log(`✅ Found aircraft info: ${aircraftInfo.displayName} (${aircraftInfo.manufacturer})`);
-        // Flight found in cache
-        this.markFlightWithBanner(flight.element, aircraftInfo);
+        flightsWithInfo.push({ flight, aircraftInfo });
       } else {
         console.log(`❌ No aircraft info found for: ${flight.flightNumber}`);
-        // Flight not found, will be fetched from API
         missingFlights.push(flight);
       }
     }
 
+    // Apply banners for flights found in cache
+    for (const { flight, aircraftInfo } of flightsWithInfo) {
+      this.markFlightWithBanner(flight.element, aircraftInfo);
+    }
+
     console.log(`\nMissing flights (${missingFlights.length}):`, missingFlights.map(f => f.flightNumber));
 
-    // If there are missing flights, fetch from API
+    // If there are missing flights, fetch from API once
     if (missingFlights.length > 0) {
       console.log('Fetching missing flights from API...');
       await this.fetchMissingAircraftData();
@@ -559,7 +579,7 @@ class AircraftManager {
         bgColor = '#ffe5e5';
         borderColor = '#dc2626';
       } else if (make === 'airbus') {
-        bannerText = `✈️ AIRBUS DETECTED (${aircraftInfo.displayName})`;
+        bannerText = `✈️ AIRBUS (${aircraftInfo.displayName})`;
         bgColor = '#e5f0ff';
         borderColor = '#2563eb';
       } else if (make === 'other') {
