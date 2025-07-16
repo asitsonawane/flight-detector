@@ -530,6 +530,11 @@ class AircraftManager {
       return;
     }
 
+    // Show loading states for all flights immediately
+    for (const flight of flightNumbers) {
+      this.markFlightWithLoadingBanner(flight.element);
+    }
+
     // Check each flight against cache and collect missing flights
     const missingFlights = [];
     const flightsWithInfo = [];
@@ -547,9 +552,9 @@ class AircraftManager {
       }
     }
 
-    // Apply banners for flights found in cache
+    // Update banners for flights found in cache
     for (const { flight, aircraftInfo } of flightsWithInfo) {
-      this.markFlightWithBanner(flight.element, aircraftInfo);
+      this.updateFlightBanner(flight.element, aircraftInfo);
     }
 
     console.log(`\nMissing flights (${missingFlights.length}):`, missingFlights.map(f => f.flightNumber));
@@ -564,7 +569,7 @@ class AircraftManager {
         const aircraftInfo = this.aircraftCache[flight.flightNumber];
         if (aircraftInfo) {
           console.log(`✅ Found in API cache: ${flight.flightNumber} -> ${aircraftInfo.displayName}`);
-          this.markFlightWithBanner(flight.element, aircraftInfo);
+          this.updateFlightBanner(flight.element, aircraftInfo);
         } else {
           console.log(`❌ Still not found after API call: ${flight.flightNumber}`);
           this.markFlightWithUnknownBanner(flight.element);
@@ -578,17 +583,35 @@ class AircraftManager {
     console.log('=== Flight processing complete ===');
   }
 
-  // Mark flight with banner
-  markFlightWithBanner(flightDiv, aircraftInfo) {
-    // Try to find the correct child for one-way cards
+  // Mark flight with loading banner (initial state)
+  markFlightWithLoadingBanner(flightDiv) {
     let targetDiv = flightDiv;
-    // For one-way cards, the card is .sc-aXZVg.dczbns.mb-2.bg-white
     if (flightDiv.classList.contains('sc-aXZVg') && flightDiv.classList.contains('dczbns') && flightDiv.classList.contains('mb-2') && flightDiv.classList.contains('bg-white')) {
-      // Try to find the first child div (the card content)
       const inner = flightDiv.querySelector('div');
       if (inner) targetDiv = inner;
     }
     if (targetDiv && targetDiv.nodeType === Node.ELEMENT_NODE && !targetDiv.classList.contains('aircraft-banner-flight')) {
+      targetDiv.classList.add('aircraft-banner-flight', 'loading');
+      targetDiv.setAttribute('data-aircraft-banner', '');
+      // Remove any previous label content
+      let label = targetDiv.querySelector('.aircraft-label-content');
+      if (label) label.remove();
+      // Inject spinner and loading text
+      const span = document.createElement('span');
+      span.className = 'aircraft-label-content';
+      span.innerHTML = '<span class="spinner"></span>Loading...';
+      targetDiv.appendChild(span);
+    }
+  }
+
+  // Update flight banner with actual aircraft data
+  updateFlightBanner(flightDiv, aircraftInfo) {
+    let targetDiv = flightDiv;
+    if (flightDiv.classList.contains('sc-aXZVg') && flightDiv.classList.contains('dczbns') && flightDiv.classList.contains('mb-2') && flightDiv.classList.contains('bg-white')) {
+      const inner = flightDiv.querySelector('div');
+      if (inner) targetDiv = inner;
+    }
+    if (targetDiv && targetDiv.nodeType === Node.ELEMENT_NODE && targetDiv.classList.contains('aircraft-banner-flight')) {
       const make = this.getAircraftMake(aircraftInfo.aircraftType);
       let bannerText = '';
       if (make === 'boeing') {
@@ -600,23 +623,34 @@ class AircraftManager {
       } else if (make === 'unknown') {
         bannerText = `✈️ AIRCRAFT: Unknown`;
       }
-      targetDiv.classList.add('aircraft-banner-flight', make);
+      // Remove all possible manufacturer classes and loading
+      const manufacturerClasses = ['boeing', 'airbus', 'other', 'unknown', 'loading'];
+      targetDiv.classList.remove(...manufacturerClasses);
+      targetDiv.classList.add(make);
       targetDiv.setAttribute('data-aircraft-banner', bannerText);
+      // Remove spinner/label content if present
+      let label = targetDiv.querySelector('.aircraft-label-content');
+      if (label) label.remove();
     }
   }
 
   // Mark flight with unknown banner (when no aircraft info is available)
   markFlightWithUnknownBanner(flightDiv) {
-    // Try to find the correct child for one-way cards
     let targetDiv = flightDiv;
     if (flightDiv.classList.contains('sc-aXZVg') && flightDiv.classList.contains('dczbns') && flightDiv.classList.contains('mb-2') && flightDiv.classList.contains('bg-white')) {
       const inner = flightDiv.querySelector('div');
       if (inner) targetDiv = inner;
     }
-    if (targetDiv && targetDiv.nodeType === Node.ELEMENT_NODE && !targetDiv.classList.contains('aircraft-banner-flight')) {
+    if (targetDiv && targetDiv.nodeType === Node.ELEMENT_NODE && targetDiv.classList.contains('aircraft-banner-flight')) {
       const bannerText = `✈️ AIRCRAFT: Unknown`;
-      targetDiv.classList.add('aircraft-banner-flight', 'unknown');
+      // Remove all possible manufacturer classes and loading
+      const manufacturerClasses = ['boeing', 'airbus', 'other', 'unknown', 'loading'];
+      targetDiv.classList.remove(...manufacturerClasses);
+      targetDiv.classList.add('unknown');
       targetDiv.setAttribute('data-aircraft-banner', bannerText);
+      // Remove spinner/label content if present
+      let label = targetDiv.querySelector('.aircraft-label-content');
+      if (label) label.remove();
     }
   }
 
