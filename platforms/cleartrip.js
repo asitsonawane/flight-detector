@@ -146,18 +146,42 @@ class CleartripPlatform {
   // Extract flight numbers from Cleartrip DOM
   extractFlightNumbers() {
     const flightNumbers = [];
+    // Round trip parent selector
+    const roundTripParent = document.querySelector('.boGMsB.boeCrd.flex-1.flex.mt-6');
+    if (roundTripParent) {
+      // Outbound and return columns: select all cards with .br-4.c-pointer
+      const outboundCards = roundTripParent.querySelectorAll('.mOFvx.w-50p.pr-2 > div > div.br-4.c-pointer');
+      const returnCards = roundTripParent.querySelectorAll('.dQKsxO.w-50p.pl-3 > div > div.br-4.c-pointer');
+      const allCards = [...outboundCards, ...returnCards];
+      console.log(`Found ${allCards.length} round trip flight cards in DOM`);
+      allCards.forEach((card, index) => {
+        // Try to find the flight number element inside the card
+        const flightNumberElement = card.querySelector('p[class*="fUNxto"]');
+        if (flightNumberElement) {
+          const rawFlightNumber = flightNumberElement.textContent.trim();
+          const normalizedFlightNumber = this.normalizeFlightNumber(rawFlightNumber);
+          console.log(`Round trip flight ${index + 1}: Raw=\"${rawFlightNumber}\", Normalized=\"${normalizedFlightNumber}\"`);
+          flightNumbers.push({
+            element: card,
+            flightNumber: normalizedFlightNumber,
+            rawFlightNumber: rawFlightNumber
+          });
+        } else {
+          console.warn(`No flight number element found in round trip card ${index + 1}`);
+        }
+      });
+      console.log('Extracted round trip flight numbers:', flightNumbers.map(f => f.flightNumber));
+      return flightNumbers;
+    }
+    // Fallback: one-way logic (untouched)
     const flightCards = document.querySelectorAll('.sc-aXZVg.dczbns.mb-2.bg-white');
-    
     console.log(`Found ${flightCards.length} flight cards in DOM`);
-    
     flightCards.forEach((card, index) => {
       const flightNumberElement = card.querySelector('.sc-eqUAAy.fkahrI');
       if (flightNumberElement) {
         const rawFlightNumber = flightNumberElement.textContent.trim();
         const normalizedFlightNumber = this.normalizeFlightNumber(rawFlightNumber);
-        
-        console.log(`Flight ${index + 1}: Raw="${rawFlightNumber}", Normalized="${normalizedFlightNumber}"`);
-        
+        console.log(`Flight ${index + 1}: Raw=\"${rawFlightNumber}\", Normalized=\"${normalizedFlightNumber}\"`);
         flightNumbers.push({
           element: card,
           flightNumber: normalizedFlightNumber,
@@ -167,7 +191,6 @@ class CleartripPlatform {
         console.warn(`No flight number element found in card ${index + 1}`);
       }
     });
-    
     console.log('Extracted flight numbers:', flightNumbers.map(f => f.flightNumber));
     return flightNumbers;
   }

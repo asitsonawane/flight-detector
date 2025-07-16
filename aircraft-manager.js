@@ -236,9 +236,8 @@ class AircraftManager {
       return this.aircraftCache[normalizedFlightNumber];
     }
 
-    // If not cached, mark as missing and return null
+    // If not cached, return null (don't mark as missing yet - wait for API call)
     console.log(`Flight not found in cache: ${normalizedFlightNumber}`);
-    await this.trackMissingFlight(normalizedFlightNumber);
     return null;
   }
 
@@ -287,7 +286,7 @@ class AircraftManager {
   }
 
   // Fetch missing aircraft data from API
-  async fetchMissingAircraftData() {
+  async fetchMissingAircraftData(currentMissingFlights = null) {
     if (!this.platform) {
       console.error('Platform not initialized');
       return;
@@ -299,8 +298,17 @@ class AircraftManager {
       return;
     }
 
-    // Get missing flights that are not in cache
-    const missingFlights = Array.from(this.missingFlights).filter(flight => !this.aircraftCache[flight]);
+    // Use current missing flights if provided, otherwise use persistent missing flights
+    let missingFlights;
+    if (currentMissingFlights) {
+      // Use the current missing flights from the page
+      missingFlights = currentMissingFlights.map(flight => flight.flightNumber).filter(flight => !this.aircraftCache[flight]);
+      console.log(`📋 Processing ${currentMissingFlights.length} current missing flights, ${missingFlights.length} not in cache`);
+    } else {
+      // Use persistent missing flights (for backward compatibility)
+      missingFlights = Array.from(this.missingFlights).filter(flight => !this.aircraftCache[flight]);
+      console.log(`📋 Processing ${this.missingFlights.size} persistent missing flights, ${missingFlights.length} not in cache`);
+    }
     
     if (missingFlights.length === 0) {
       console.log('ℹ️ No missing flights to fetch');
@@ -333,7 +341,8 @@ class AircraftManager {
           }
         }
         
-        // Track flights that are still missing (not found in either API)
+        // Note: Flights that are still missing after both API calls are already tracked
+        // when the Vercel API returns them in the missingFlights array
         const stillMissingFlights = vercelMissingFlights.filter(flight => !cleartripResults[flight]);
         for (const flight of stillMissingFlights) {
           console.log(`❌ Flight ${flight} not found in either API`);
@@ -403,6 +412,8 @@ class AircraftManager {
         
         for (const missingFlight of data.missingFlights) {
           console.log(`❌ Flight not found in Vercel API: ${missingFlight.flightCode}`);
+          // Only track flights that are specifically returned as missing by the Vercel API
+          await this.trackMissingFlight(missingFlight.flightCode);
         }
       }
 
@@ -546,7 +557,7 @@ class AircraftManager {
     // If there are missing flights, fetch from API once
     if (missingFlights.length > 0) {
       console.log('Fetching missing flights from API...');
-      await this.fetchMissingAircraftData();
+      await this.fetchMissingAircraftData(missingFlights);
       
       // Process missing flights again with updated cache
       for (const flight of missingFlights) {
@@ -558,8 +569,8 @@ class AircraftManager {
           console.log(`❌ Still not found after API call: ${flight.flightNumber}`);
           this.markFlightWithUnknownBanner(flight.element);
           
-          // Track this flight as missing from Vercel API
-          await this.trackMissingFlight(flight.flightNumber);
+          // Note: Missing flights are now tracked in fetchFromVercelApi when the API returns them
+          // No need to track here as it would be redundant
         }
       }
     }
@@ -569,55 +580,43 @@ class AircraftManager {
 
   // Mark flight with banner
   markFlightWithBanner(flightDiv, aircraftInfo) {
-    if (flightDiv && flightDiv.nodeType === Node.ELEMENT_NODE && !flightDiv.classList.contains('aircraft-banner-flight')) {
+    // Try to find the correct child for one-way cards
+    let targetDiv = flightDiv;
+    // For one-way cards, the card is .sc-aXZVg.dczbns.mb-2.bg-white
+    if (flightDiv.classList.contains('sc-aXZVg') && flightDiv.classList.contains('dczbns') && flightDiv.classList.contains('mb-2') && flightDiv.classList.contains('bg-white')) {
+      // Try to find the first child div (the card content)
+      const inner = flightDiv.querySelector('div');
+      if (inner) targetDiv = inner;
+    }
+    if (targetDiv && targetDiv.nodeType === Node.ELEMENT_NODE && !targetDiv.classList.contains('aircraft-banner-flight')) {
       const make = this.getAircraftMake(aircraftInfo.aircraftType);
       let bannerText = '';
-      let bgColor = '', borderColor = '', textColor = '#222';
-      
       if (make === 'boeing') {
-        bannerText = `✈️ BOEING DETECTED (${aircraftInfo.displayName})`;
-        bgColor = '#ffe5e5';
-        borderColor = '#dc2626';
+        bannerText = `✈️ BOEING (${aircraftInfo.displayName})`;
       } else if (make === 'airbus') {
         bannerText = `✈️ AIRBUS (${aircraftInfo.displayName})`;
-        bgColor = '#e5f0ff';
-        borderColor = '#2563eb';
       } else if (make === 'other') {
         bannerText = `✈️ ${aircraftInfo.displayName}`;
-        bgColor = '#e5ffe5';
-        borderColor = '#16a34a';
       } else if (make === 'unknown') {
         bannerText = `✈️ AIRCRAFT: Unknown`;
-        bgColor = '#fff4e5';
-        borderColor = '#ff9800';
-        textColor = '#b45309';
       }
-      
-      flightDiv.classList.add('aircraft-banner-flight', make);
-      flightDiv.setAttribute('data-aircraft-banner', bannerText);
-      
-      // Inline style for color override
-      flightDiv.style.setProperty('border-color', borderColor, 'important');
-      flightDiv.style.setProperty('background-color', bgColor, 'important');
-      flightDiv.style.setProperty('color', textColor, 'important');
+      targetDiv.classList.add('aircraft-banner-flight', make);
+      targetDiv.setAttribute('data-aircraft-banner', bannerText);
     }
   }
 
   // Mark flight with unknown banner (when no aircraft info is available)
   markFlightWithUnknownBanner(flightDiv) {
-    if (flightDiv && flightDiv.nodeType === Node.ELEMENT_NODE && !flightDiv.classList.contains('aircraft-banner-flight')) {
+    // Try to find the correct child for one-way cards
+    let targetDiv = flightDiv;
+    if (flightDiv.classList.contains('sc-aXZVg') && flightDiv.classList.contains('dczbns') && flightDiv.classList.contains('mb-2') && flightDiv.classList.contains('bg-white')) {
+      const inner = flightDiv.querySelector('div');
+      if (inner) targetDiv = inner;
+    }
+    if (targetDiv && targetDiv.nodeType === Node.ELEMENT_NODE && !targetDiv.classList.contains('aircraft-banner-flight')) {
       const bannerText = `✈️ AIRCRAFT: Unknown`;
-      const bgColor = '#fff4e5';
-      const borderColor = '#ff9800';
-      const textColor = '#b45309';
-      
-      flightDiv.classList.add('aircraft-banner-flight', 'unknown');
-      flightDiv.setAttribute('data-aircraft-banner', bannerText);
-      
-      // Inline style for color override
-      flightDiv.style.setProperty('border-color', borderColor, 'important');
-      flightDiv.style.setProperty('background-color', bgColor, 'important');
-      flightDiv.style.setProperty('color', textColor, 'important');
+      targetDiv.classList.add('aircraft-banner-flight', 'unknown');
+      targetDiv.setAttribute('data-aircraft-banner', bannerText);
     }
   }
 

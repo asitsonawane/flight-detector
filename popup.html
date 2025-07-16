@@ -80,11 +80,11 @@
 
       <div class="section">
         <h3>Missing Flights</h3>
-        <p>Download a list of flight numbers that were not found in the Vercel API database:</p>
+        <p>Download a list of flight numbers that were specifically not found in the Vercel API database:</p>
         <button id="export-missing-flights">Download Missing Flights</button>
         <div id="missing-flights-count" class="missing-flights-count"></div>
         <p style="font-size: 12px; color: #666; margin-top: 5px;">
-          These are flights that were not found in the Vercel API, even after trying Cleartrip's API as fallback.
+          These are flights that the Vercel API explicitly returned as "not found in the database" with error messages.
         </p>
         
         <div style="margin-top: 10px;">

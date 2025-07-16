@@ -7,7 +7,7 @@ A Chrome extension that automatically identifies aircraft makes (Boeing, Airbus,
 - **Real-time aircraft detection** on Cleartrip.com
 - **Color-coded banners** for different aircraft types
 - **Smart caching** to minimize API calls
-- **Missing flight tracking** for database improvement
+- **Missing flight tracking** for database improvement (only tracks flights explicitly not found by Vercel API)
 - **Data export** functionality
 - **Privacy-focused** - no personal data collected
 
